@@ -513,7 +513,8 @@ function render(){
   if(regionFilterActive){
     rows=rows.filter(r=>{
       const rArr=Array.isArray(r.region)?r.region:[r.region];
-      return checkedRegions.some(cr=>rArr.includes(cr));
+      const rStr=rArr.join('|');
+      return checkedRegions.some(cr=>rStr.includes(cr));
     });
   }
   if(clientFilter) rows=rows.filter(r=>r.client===clientFilter);
