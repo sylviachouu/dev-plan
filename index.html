@@ -229,6 +229,7 @@
     <button class="nav-tab" onclick="switchPage('settings',this)">⚙ 設定</button>
   </div>
   <div class="header-actions">
+    <button class="btn btn-ghost" onclick="loadFromSheet()">↻ 重新整理</button>
     <button class="btn btn-ghost" onclick="openImport()">⬆ 匯入 CSV</button>
     <button class="btn btn-ghost" onclick="exportCSV()">⬇ 匯出 CSV</button>
     <button class="btn btn-primary" onclick="openAdd()">＋ 新增計畫</button>
@@ -393,7 +394,68 @@ let data = [
   {vt:'其他',client:'M2', region:['平湖'],          season:'',    type:'客人款',styles:10, pieces:18,  supply:'2025-05-10',demand:'2025-05-20',note:'Amazon'},
 ];
 
+const SHEET_ID = '1EN0tpxAzA6XsK8zRwrRajC52JfSaKuNvtmwOwdoWy9c';
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
 let editIdx = -1;
+let isLoadingSheet = false;
+
+async function loadFromSheet() {
+  isLoadingSheet = true;
+  showBanner('載入中…', false);
+  try {
+    const res = await fetch(SHEET_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('fetch failed');
+    const text = await res.text();
+    const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) { showBanner('試算表沒有資料', true); isLoadingSheet=false; return; }
+    const parsed = [];
+    lines.forEach((line, i) => {
+      if (i === 0) return; // skip header
+      const cols = parseCSVLine(line);
+      if (cols.length < 9) return;
+      const [vt, client, region, season, type, styles, pieces, supply, demand, ...rest] = cols;
+      const rArr = region.replace(/^"|"$/g,'').split('|').map(s=>s.trim()).filter(Boolean);
+      parsed.push({
+        vt: vt.trim() || '其他',
+        client: client.trim() || '未命名',
+        region: rArr.length ? rArr : ['平湖'],
+        season: season.trim(),
+        type: ['客人款','自製樣'].includes(type.trim()) ? type.trim() : '客人款',
+        styles: parseInt(styles) || 0,
+        pieces: parseInt(pieces) || 0,
+        supply: supply.trim(),
+        demand: demand.trim(),
+        note: rest.join(',').replace(/^"|"$/g,'').trim(),
+      });
+    });
+    if (parsed.length > 0) {
+      data = parsed;
+      showBanner(`已從 Google Sheets 載入 ${parsed.length} 筆`, false, true);
+    } else {
+      showBanner('試算表格式有誤，顯示預設資料', true);
+    }
+  } catch(e) {
+    showBanner('無法連接 Google Sheets，顯示預設資料', true);
+  }
+  isLoadingSheet = false;
+  render();
+}
+
+function showBanner(msg, isError=false, autoHide=false) {
+  let banner = document.getElementById('sheetBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'sheetBanner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:500;text-align:center;font-size:12px;padding:6px 16px;transition:opacity 0.4s';
+    document.body.prepend(banner);
+  }
+  banner.style.background = isError ? '#f5c0b0' : '#d4edda';
+  banner.style.color = isError ? '#7a2010' : '#1a5c2a';
+  banner.style.opacity = '1';
+  banner.textContent = msg;
+  if (autoHide) setTimeout(() => { banner.style.opacity='0'; }, 3000);
+}
 
 // ══ Helpers ══
 function today0() { const d=new Date(); d.setHours(0,0,0,0); return d; }
@@ -694,7 +756,9 @@ document.querySelectorAll('.modal-overlay').forEach(el=>{
   el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
 });
 
-render();
+// Auto-refresh every 60 seconds
+loadFromSheet();
+setInterval(loadFromSheet, 60000);
 </script>
 </body>
 </html>
