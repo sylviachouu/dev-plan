@@ -413,8 +413,17 @@ async function loadFromSheet() {
     lines.forEach((line, i) => {
       if (i === 0) return; // skip header
       const cols = parseCSVLine(line);
-      if (cols.length < 9) return;
-      const [vt, client, region, season, type, styles, pieces, supply, demand, ...rest] = cols;
+      if (cols.length < 7) return; // need at least up to pieces
+      const vt     = cols[0] || '';
+      const client = cols[1] || '';
+      const region = cols[2] || '';
+      const season = cols[3] || '';
+      const type   = cols[4] || '';
+      const styles = cols[5] || '0';
+      const pieces = cols[6] || '0';
+      const supply = cols[7] || '';
+      const demand = cols[8] || '';
+      const note   = cols.slice(9).join(',').replace(/^"|"$/g,'').trim();
       const rArr = region.replace(/^"|"$/g,'').split('|').map(s=>s.trim()).filter(Boolean);
       parsed.push({
         vt: vt.trim() || '其他',
@@ -426,7 +435,7 @@ async function loadFromSheet() {
         pieces: parseInt(pieces) || 0,
         supply: supply.trim(),
         demand: demand.trim(),
-        note: rest.join(',').replace(/^"|"$/g,'').trim(),
+        note,
       });
     });
     if (parsed.length > 0) {
