@@ -424,7 +424,7 @@ async function loadFromSheet() {
       const supply = cols[7] || '';
       const demand = cols[8] || '';
       const note   = cols.slice(9).join(',').replace(/^"|"$/g,'').trim();
-      const rArr = region.replace(/^"|"$/g,'').split('|').map(s=>s.trim()).filter(Boolean);
+      const rArr = region.replace(/^"|"$/g,'').replace(/\|+$/,'').split('|').map(s=>s.trim()).filter(Boolean);
       parsed.push({
         vt: vt.trim() || '其他',
         client: client.trim() || '未命名',
