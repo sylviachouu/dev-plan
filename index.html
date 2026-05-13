@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>樣品開發計畫</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e4e2db;
+    --border-strong: #ccc9bf;
+    --text: #1a1916;
+    --text-muted: #888780;
+    --text-light: #b4b2a9;
+    --today-line: #d04a2f;
+    --header-bg: #1a1916;
+    --header-text: #f7f6f3;
+    --accent: #d04a2f;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Header ── */
+  .page-header {
+    background: var(--header-bg); color: var(--header-text);
+    padding: 0 28px;
+    display: flex; align-items: stretch; justify-content: space-between; gap: 16px;
+  }
+  .header-left { display: flex; align-items: stretch; }
+  .header-brand { padding: 14px 20px 14px 0; border-right: 1px solid rgba(255,255,255,0.1); margin-right: 4px; }
+  .header-brand h1 { font-size: 15px; font-weight: 500; letter-spacing: 0.05em; }
+  .header-brand .subtitle { font-size: 11px; color: #888; margin-top: 2px; }
+  .nav-tab {
+    padding: 0 16px; display: flex; align-items: center;
+    font-size: 12px; color: #888; cursor: pointer;
+    border: none; border-bottom: 2px solid transparent;
+    background: none; font-family: inherit;
+    transition: color 0.15s; white-space: nowrap;
+  }
+  .nav-tab:hover { color: #ccc; }
+  .nav-tab.active { color: #fff; border-bottom-color: var(--accent); }
+  .header-actions { display: flex; gap: 8px; align-items: center; padding: 10px 0; }
+
+  /* ── Buttons ── */
+  .btn {
+    font-family: inherit; font-size: 12px; padding: 6px 14px;
+    border-radius: 4px; border: 1px solid transparent; cursor: pointer;
+    font-weight: 400; display: inline-flex; align-items: center; gap: 5px;
+    transition: opacity 0.15s; white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.82; }
+  .btn-ghost { background: rgba(255,255,255,0.1); color: #eee; border-color: rgba(255,255,255,0.2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+  .btn-sm { font-size: 11px; padding: 5px 12px; }
+
+  /* ── Controls ── */
+  .controls {
+    padding: 10px 28px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .controls label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .controls select {
+    font-family: inherit; font-size: 12px; padding: 4px 8px;
+    border: 1px solid var(--border-strong); border-radius: 4px;
+    background: var(--bg); color: var(--text); cursor: pointer;
+  }
+  .ctrl-sep { width: 1px; height: 20px; background: var(--border-strong); }
+  .date-display { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+  .date-display strong { color: var(--accent); }
+  .region-cb-label {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; color: var(--text); cursor: pointer;
+    padding: 3px 8px; border: 1px solid var(--border-strong);
+    border-radius: 4px; background: var(--bg);
+    user-select: none; transition: background 0.12s, border-color 0.12s;
+  }
+  .region-cb-label:has(input:checked) {
+    background: #e8f0f8; border-color: #7fb3d9; color: #1a4a7a;
+  }
+  .region-cb-label input { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex; gap: 14px; align-items: center;
+    padding: 7px 28px; background: var(--bg);
+    border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+  .leg-box { width: 24px; height: 10px; border-radius: 2px; }
+  .leg-today { width: 2px; height: 14px; background: var(--today-line); border-radius: 1px; }
+
+  /* ── Gantt ── */
+  .gantt-wrap { padding: 20px 28px 40px; overflow-x: auto; }
+  .vt-group { margin-bottom: 20px; }
+  .vt-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--text-muted);
+    padding: 0 0 6px 4px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .vt-badge { background: var(--header-bg); color: var(--header-text); font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 500; }
+
+  /* ── Table ── */
+  .gantt-table { border-collapse: collapse; width: max-content; min-width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; box-shadow: var(--shadow); }
+  .gantt-table thead tr:first-child th { background: #3a3830; color: #ccc; }
+  .gantt-table thead tr:last-child th  { background: #3a3830; color: #ccc; }
+  thead th { font-size: 11px; font-weight: 500; padding: 7px 10px; white-space: nowrap; text-align: center; vertical-align: middle; position: sticky; top: 0; z-index: 4; border-right: 1px solid rgba(255,255,255,0.07); }
+  thead th.fc { text-align: center !important; vertical-align: middle; position: sticky; z-index: 6; }
+  thead th.fc-vt    { left: 0;    min-width: 44px; max-width: 44px; }
+  thead th.fc-client{ left: 44px; min-width: 76px; max-width: 76px; }
+  thead th.fc-region{ left: 120px;min-width: 62px; max-width: 62px; }
+  thead th.fc-season{ left: 182px;min-width: 52px; max-width: 52px; }
+  thead th.fc-type  { left: 234px;min-width: 58px; max-width: 58px; }
+  thead th.fc-styles{ left: 292px;min-width: 44px; max-width: 44px; }
+  thead th.fc-pieces{ left: 336px;min-width: 44px; max-width: 44px; }
+  thead th.fc-supply{ left: 380px;min-width: 56px; max-width: 56px; }
+  thead th.fc-demand{ left: 436px;min-width: 56px; max-width: 56px; }
+  thead th.fc-demand { border-right: 2px solid rgba(255,255,255,0.18) !important; }
+  tbody td.fc-demand { border-right: 2px solid var(--border-strong) !important; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover td { background: #f9f8f5; }
+  tbody td { font-size: 12px; padding: 5px 10px; color: var(--text); vertical-align: middle; white-space: nowrap; background: var(--surface); }
+  tbody td.fc { position: sticky; z-index: 2; background: var(--surface); }
+  tbody tr:hover td.fc { background: #f9f8f5; }
+  tbody td.fc-vt    { left: 0;    min-width: 44px; max-width: 44px; font-weight:600; font-size:11px; color:var(--text-muted); }
+  tbody td.fc-client{ left: 44px; min-width: 76px; max-width: 76px; font-weight:500; }
+  tbody td.fc-region{ left: 120px;min-width: 62px; max-width: 62px; color:var(--text-muted); }
+  tbody td.fc-season{ left: 182px;min-width: 52px; max-width: 52px; color:var(--text-muted); font-size:11px; }
+  tbody td.fc-type  { left: 234px;min-width: 58px; max-width: 58px; }
+  tbody td.fc-styles{ left: 292px;min-width: 44px; max-width: 44px; text-align:right; }
+  tbody td.fc-pieces{ left: 336px;min-width: 44px; max-width: 44px; text-align:right; color:var(--text-muted); }
+  tbody td.fc-supply{ left: 380px;min-width: 56px; max-width: 56px; font-size:11px; color:var(--text-muted); }
+  tbody td.fc-demand{ left: 436px;min-width: 56px; max-width: 56px; font-size:11px; color:var(--text-muted); }
+  td.day-cell, th.day-cell { width: 26px; min-width: 26px; max-width: 26px; padding: 3px 1px; text-align: center; }
+  td.today-col { background: rgba(208,74,47,0.06) !important; }
+  th.today-head { color: var(--today-line) !important; font-weight: 600; }
+  td.action-col { width: 28px; min-width: 28px; text-align: center; padding: 0 4px; }
+  .row-del { font-size: 11px; color: var(--text-light); background: none; border: none; cursor: pointer; padding: 3px; border-radius: 3px; line-height: 1; }
+  .row-del:hover { background: #fee; color: var(--accent); }
+  .note-row td { font-size: 11px; color: var(--text-muted); padding: 2px 10px 6px; font-style: italic; border-bottom: 1px solid var(--border); }
+
+  /* ── Settings ── */
+  .settings-wrap { padding: 28px; max-width: 640px; }
+  .settings-section { margin-bottom: 32px; }
+  .settings-section > h2 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .settings-section > p { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.6; }
+  .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .settings-card-pad { padding: 16px 20px; }
+  .add-row { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .mini-input {
+    font-family: inherit; font-size: 12px; padding: 5px 10px;
+    border: 1px solid var(--border-strong); border-radius: 4px;
+    background: var(--bg); color: var(--text);
+  }
+  .mini-input:focus { outline: none; border-color: var(--accent); }
+  .color-swatch { width: 30px; height: 30px; border: 1px solid var(--border-strong); border-radius: 4px; padding: 2px; cursor: pointer; background: var(--surface); }
+
+  /* VT table */
+  .vt-tbl { width: 100%; border-collapse: collapse; }
+  .vt-tbl th { font-size: 11px; font-weight: 500; color: var(--text-muted); text-align: left; padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--bg); }
+  .vt-tbl td { padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 12px; vertical-align: middle; }
+  .vt-tbl tr:last-child td { border-bottom: none; }
+  .vt-color-btn { width: 26px; height: 26px; border: 1px solid var(--border-strong); border-radius: 4px; padding: 1px; cursor: pointer; }
+  .vt-name-input {
+    font-family: inherit; font-size: 12px; padding: 4px 8px;
+    border: 1px solid transparent; border-radius: 4px;
+    background: transparent; color: var(--text); width: 100px;
+  }
+  .vt-name-input:focus { outline: none; border-color: var(--accent); background: var(--bg); }
+  .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-light); font-size: 14px; padding: 3px 5px; border-radius: 3px; line-height: 1; }
+  .icon-btn:hover { color: var(--accent); background: #fee; }
+
+  /* Region tags */
+  .tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 4px; padding: 5px 10px; font-size: 12px; }
+  .tag-del { background: none; border: none; cursor: pointer; color: var(--text-light); font-size: 13px; line-height: 1; padding: 0; }
+  .tag-del:hover { color: var(--accent); }
+
+  /* ── Modal ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 8px; width: 420px; max-width: 96vw; box-shadow: 0 8px 40px rgba(0,0,0,0.22); overflow: hidden; }
+  .modal-head { padding: 16px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-head h2 { font-size: 14px; font-weight: 500; }
+  .modal-close { background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-muted); line-height:1; padding:2px 4px; }
+  .modal-body { padding: 18px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .field input, .field select { font-family: inherit; font-size: 13px; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg); color: var(--text); width: 100%; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(208,74,47,0.12); }
+  .modal-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .import-modal .modal-body { grid-template-columns: 1fr; }
+  .csv-area { width: 100%; height: 150px; font-family: monospace; font-size: 11px; padding: 10px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg); color: var(--text); resize: vertical; }
+  .csv-hint { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+  .csv-hint code { background: var(--border); padding: 1px 4px; border-radius: 2px; font-size: 10px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  .empty-state p { font-size: 13px; margin-top: 8px; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--header-bg); color: var(--header-text); padding: 10px 18px; border-radius: 6px; font-size: 12px; z-index: 999; opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  @media (max-width:600px) { .page-header{padding:0 14px} .controls,.legend,.gantt-wrap,.settings-wrap{padding-left:14px;padding-right:14px} }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-left">
+    <div class="header-brand">
+      <h1>樣品開發計畫</h1>
+      <div class="subtitle" id="headerDate"></div>
+    </div>
+    <button class="nav-tab active" onclick="switchPage('gantt',this)">甘特圖</button>
+    <button class="nav-tab" onclick="switchPage('settings',this)">⚙ 設定</button>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="openImport()">⬆ 匯入 CSV</button>
+    <button class="btn btn-ghost" onclick="exportCSV()">⬇ 匯出 CSV</button>
+    <button class="btn btn-primary" onclick="openAdd()">＋ 新增計畫</button>
+  </div>
+</header>
+
+<!-- ══ GANTT PAGE ══ -->
+<div class="page active" id="page-gantt">
+  <div class="controls">
+    <label>顯示天數</label>
+    <select id="dayCount" onchange="render()">
+      <option value="14">14 天</option><option value="21">21 天</option>
+      <option value="30" selected>30 天</option><option value="45">45 天</option><option value="60">60 天</option>
+    </select>
+    <div class="ctrl-sep"></div>
+    <label>篩選 VT</label>
+    <select id="vtFilter" onchange="render()"><option value="">全部</option></select>
+    <div class="ctrl-sep"></div>
+    <label>製樣區</label>
+    <div id="regionCheckboxes" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
+    <div class="ctrl-sep"></div>
+    <label>客人</label>
+    <select id="clientFilter" onchange="render()"><option value="">全部</option></select>
+    <div class="ctrl-sep"></div>
+    <label>款式類型</label>
+    <select id="typeFilter" onchange="render()">
+      <option value="">全部</option>
+      <option value="客人款">客人款</option>
+      <option value="自製樣">自製樣</option>
+    </select>
+    <div class="date-display">今天 <strong id="todayLabel"></strong></div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="gantt-wrap" id="ganttWrap"></div>
+</div>
+
+<!-- ══ SETTINGS PAGE ══ -->
+<div class="page" id="page-settings">
+  <div class="settings-wrap">
+
+    <div class="settings-section">
+      <h2>VT 分組</h2>
+      <p>管理 VT 名稱與顏色。點擊色塊可更改顏色，點擊名稱可直接編輯，完成後按 Enter 或點其他地方確認。</p>
+      <div class="settings-card">
+        <table class="vt-tbl">
+          <thead><tr><th style="width:52px">顏色</th><th>名稱</th><th style="width:40px"></th></tr></thead>
+          <tbody id="vtTableBody"></tbody>
+        </table>
+        <div class="add-row">
+          <input class="mini-input" id="newVtName" placeholder="新 VT 名稱" style="width:130px" onkeydown="if(event.key==='Enter')addVT()">
+          <input type="color" id="newVtColor" value="#9ab8d4" class="color-swatch" title="選擇顏色">
+          <button class="btn btn-secondary btn-sm" onclick="addVT()">＋ 新增</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>製樣區選項</h2>
+      <p>管理「新增計畫」表單中的製樣區下拉選項。點 ✕ 刪除選項（不影響已有計畫資料）。</p>
+      <div class="settings-card">
+        <div class="settings-card-pad">
+          <div class="tag-list" id="regionTagList" style="margin-bottom:12px;min-height:32px"></div>
+        </div>
+        <div class="add-row" style="border-top:1px solid var(--border)">
+          <input class="mini-input" id="newRegionInput" placeholder="新增製樣區" style="width:150px" onkeydown="if(event.key==='Enter')addRegion()">
+          <button class="btn btn-secondary btn-sm" onclick="addRegion()">＋ 新增</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">新增開發計畫</h2>
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>VT 分組</label><select id="f-vt"></select></div>
+      <div class="field"><label>客人</label><input id="f-client" placeholder="如 DKS"></div>
+      <div class="field"><label>製樣區（可複選）</label><div id="f-region-cbs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px"></div></div>
+      <div class="field"><label>季度</label><input id="f-season" placeholder="如 SP27"></div>
+      <div class="field"><label>款式類型</label><select id="f-type"><option value="客人款">客人款</option><option value="自製樣">自製樣</option></select></div>
+      <div class="field"><label>款數</label><input id="f-styles" type="number" min="1" value="5"></div>
+      <div class="field"><label>件數</label><input id="f-pieces" type="number" min="1" value="20"></div>
+      <div class="field"><label>供料日</label><input id="f-supply" type="date"></div>
+      <div class="field"><label>需求日</label><input id="f-demand" type="date"></div>
+      <div class="field full"><label>備註</label><input id="f-note" placeholder="選填"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('addModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveEntry()">確認儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-overlay import-modal" id="importModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>匯入 CSV 資料</h2>
+      <button class="modal-close" onclick="closeModal('importModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field full">
+        <label>貼上 CSV 內容</label>
+        <textarea class="csv-area" id="csvInput" placeholder="VT,客人,製樣區,款數,件數,供料日,需求日,備註
+V1,GAP,CAB,7,99,2025-05-10,2025-05-25,HO26
+V2,DKS,平湖,177,620,2025-05-06,2025-05-20,SP27"></textarea>
+      </div>
+      <div class="field full">
+        <div class="csv-hint">
+          欄位：<code>VT</code> <code>客人</code> <code>製樣區</code> <code>季度</code> <code>類型</code> <code>款數</code> <code>件數</code> <code>供料日</code> <code>需求日</code> <code>備註(選填)</code><br>
+          類型填 <code>客人款</code> 或 <code>自製樣</code>，日期格式：<code>YYYY-MM-DD</code>，第一行若為標題列自動略過。
+        </div>
+      </div>
+      <div class="field full" style="flex-direction:row">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--text)">
+          <input type="checkbox" id="importAppend"> 附加到現有資料（不清空）
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('importModal')">取消</button>
+      <button class="btn btn-primary" onclick="doImport()">匯入</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ App state ══
+let vtList = [
+  { name:'V1', color:'#7fb3d9' },
+  { name:'V2', color:'#e8a87c' },
+  { name:'V3', color:'#8dc98d' },
+  { name:'V5', color:'#d4b870' },
+  { name:'V6', color:'#7bbdbd' },
+  { name:'V7', color:'#a8a0d0' },
+  { name:'其他', color:'#c08080' },
+];
+let regionList = ['台北', 'CAB', '平湖', '嘉義'];
+
+let data = [
+  {vt:'V1',client:'GAP',  region:['CAB'],         season:'HO26',type:'客人款',styles:7,  pieces:99,  supply:'2025-05-10',demand:'2025-05-28',note:'HO26 聯名款-DCR'},
+  {vt:'V1',client:'UA',   region:['平湖'],          season:'FW27',type:'客人款',styles:1,  pieces:31,  supply:'2025-05-14',demand:'2025-06-01',note:'FW27'},
+  {vt:'V2',client:'DKS',  region:['平湖','嘉義','CAB'],season:'SP27',type:'客人款',styles:177,pieces:620,supply:'2025-05-06',demand:'2025-05-22',note:'SP27 客人款'},
+  {vt:'V2',client:'DKS',  region:['嘉義'],          season:'SP27',type:'客人款',styles:2,  pieces:85,  supply:'2025-05-06',demand:'2025-05-16',note:'高層試穿樣'},
+  {vt:'V2',client:'DKS',  region:['平湖','嘉義','CAB'],season:'SU27',type:'客人款',styles:60, pieces:192, supply:'2025-05-10',demand:'2025-05-28',note:'SU27 SP27Q2'},
+  {vt:'V3',client:'KOH',  region:['CAB'],          season:'SP27',type:'客人款',styles:10, pieces:10,  supply:'2025-05-04',demand:'2025-05-18',note:'SLW SP27'},
+  {vt:'V3',client:'QUINCE',region:['CAB'],         season:'SP27',type:'客人款',styles:10, pieces:20,  supply:'2025-05-08',demand:'2025-05-20',note:'童裝'},
+  {vt:'V3',client:'ZARA', region:['平湖'],          season:'FW26',type:'自製樣',styles:15, pieces:60,  supply:'2025-05-06',demand:'2025-05-25',note:'大男水洗款'},
+  {vt:'V5',client:'AIM',  region:['平湖'],          season:'C127',type:'客人款',styles:23, pieces:46,  supply:'2025-05-12',demand:'2025-05-28',note:'C127'},
+  {vt:'V5',client:'TGT',  region:['平湖'],          season:'C127',type:'客人款',styles:15, pieces:51,  supply:'2025-05-12',demand:'2025-05-30',note:'Kids Sleep 開發會議樣品'},
+  {vt:'V6',client:'GU',   region:['平湖'],          season:'SS27',type:'客人款',styles:93, pieces:751, supply:'2025-05-02',demand:'2025-05-16',note:'SS27 客人款'},
+  {vt:'V7',client:'ONY',  region:['平湖','嘉義','CAB'],season:'SP27',type:'自製樣',styles:161,pieces:442,supply:'2025-05-06',demand:'2025-05-14',note:'SP27 5/6給BOM；5/11 YYdue'},
+  {vt:'V7',client:'BYY',  region:['平湖','嘉義','CAB'],season:'SU27',type:'客人款',styles:36, pieces:198, supply:'2025-05-08',demand:'2025-05-24',note:'SU27'},
+  {vt:'其他',client:'M2', region:['平湖'],          season:'',    type:'客人款',styles:10, pieces:18,  supply:'2025-05-10',demand:'2025-05-20',note:'Amazon'},
+];
+
+let editIdx = -1;
+
+// ══ Helpers ══
+function today0() { const d=new Date(); d.setHours(0,0,0,0); return d; }
+function getDays() {
+  const n=parseInt(document.getElementById('dayCount').value), start=today0(), days=[];
+  for(let i=0;i<n;i++){const d=new Date(start);d.setDate(d.getDate()+i);days.push(d);}
+  return days;
+}
+function fmtDate(d){return d?`${d.getMonth()+1}/${d.getDate()}`:''}
+function parseDate(s){if(!s)return null;const d=new Date(s);d.setHours(0,0,0,0);return isNaN(d)?null:d;}
+function isSame(a,b){return a&&b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+function vtColor(name){const v=vtList.find(x=>x.name===name);return v?v.color:'#aaa';}
+const WD=['日','一','二','三','四','五','六'];
+
+// ══ Page switch ══
+function switchPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='settings') renderSettings();
+}
+
+// ══ Gantt render ══
+function render(){
+  const days=getDays(), today=today0();
+  const vtFilter=document.getElementById('vtFilter').value;
+  const clientFilter=document.getElementById('clientFilter').value;
+  const typeFilter=document.getElementById('typeFilter').value;
+
+  // region checkboxes
+  const cbContainer=document.getElementById('regionCheckboxes');
+  const checkedRegions=regionList.filter(r=>{
+    const cb=document.getElementById('rcb-'+r);
+    return cb&&cb.checked;
+  });
+  // if none checked = show all; otherwise filter by intersection
+  const regionFilterActive=checkedRegions.length>0;
+
+  const opts={year:'numeric',month:'long',day:'numeric'};
+  document.getElementById('todayLabel').textContent=today.toLocaleDateString('zh-TW',opts);
+  document.getElementById('headerDate').textContent=`更新於 ${today.toLocaleDateString('zh-TW',opts)}`;
+
+  let rows=data.filter(r=>{const d=parseDate(r.demand);return d&&d>=today;});
+  if(vtFilter) rows=rows.filter(r=>r.vt===vtFilter);
+  if(regionFilterActive){
+    rows=rows.filter(r=>{
+      const rArr=Array.isArray(r.region)?r.region:[r.region];
+      return checkedRegions.some(cr=>rArr.includes(cr));
+    });
+  }
+  if(clientFilter) rows=rows.filter(r=>r.client===clientFilter);
+  if(typeFilter) rows=rows.filter(r=>r.type===typeFilter);
+
+  // VT dropdown
+  const vtSel=document.getElementById('vtFilter'), curVT=vtSel.value;
+  vtSel.innerHTML='<option value="">全部</option>'+vtList.map(v=>`<option${v.name===curVT?' selected':''}>${v.name}</option>`).join('');
+  // client dropdown — sorted alphabetically
+  const allClients=[...new Set(data.map(r=>r.client))].sort((a,b)=>a.localeCompare(b,'en'));
+  const cSel=document.getElementById('clientFilter'), curC=cSel.value;
+  cSel.innerHTML='<option value="">全部</option>'+allClients.map(c=>`<option${c===curC?' selected':''}>${c}</option>`).join('');
+
+  // region checkboxes — rebuild only if not yet rendered
+  if(!document.getElementById('rcb-'+regionList[0])){
+    cbContainer.innerHTML=regionList.map(r=>`
+      <label class="region-cb-label">
+        <input type="checkbox" id="rcb-${r}" onchange="render()"> ${r}
+      </label>`).join('');
+  }
+
+  // legend
+  document.getElementById('legend').innerHTML=
+    `<span class="leg"><span class="leg-today"></span>今天</span>`+
+    vtList.map(v=>`<span class="leg"><span class="leg-box" style="background:${v.color}"></span>${v.name}</span>`).join('');
+
+  const wrap=document.getElementById('ganttWrap');
+  if(rows.length===0){wrap.innerHTML='<div class="empty-state"><div style="font-size:32px">📋</div><p>目前沒有進行中的開發計畫</p><p style="margin-top:4px;font-size:12px">點右上角「新增計畫」開始建立</p></div>';return;}
+
+  const groups={};
+  rows.forEach(r=>{if(!groups[r.vt])groups[r.vt]=[];groups[r.vt].push(r);});
+
+  const monthSpans=[];
+  days.forEach(d=>{
+    const key=`${d.getFullYear()}-${d.getMonth()}`;
+    if(monthSpans.length&&monthSpans[monthSpans.length-1].key===key)monthSpans[monthSpans.length-1].count++;
+    else monthSpans.push({key,label:`${d.getMonth()+1}月`,count:1});
+  });
+
+  // single header row only
+  const fc=`<th class="fc fc-vt">VT</th><th class="fc fc-client">客人</th><th class="fc fc-region">製樣區</th><th class="fc fc-season">季度</th><th class="fc fc-type">類型</th><th class="fc fc-styles">款</th><th class="fc fc-pieces">件</th><th class="fc fc-supply">供料日</th><th class="fc fc-demand">需求日</th>`;
+  const mRow=monthSpans.map(m=>`<th colspan="${m.count}" style="text-align:center;border-bottom:1px solid rgba(255,255,255,0.1)">${m.label}</th>`).join('');
+  const dRow=days.map(d=>{
+    const isT=isSame(d,today),dim=d.getDay()===0||d.getDay()===6?'color:#777;':'';
+    return `<th class="day-cell${isT?' today-head':''}" style="${dim}${isT?'border-left:2px solid var(--today-line);border-right:2px solid var(--today-line)':''}">${d.getDate()}<br><span style="font-size:9px;font-weight:300">${WD[d.getDay()]}</span></th>`;
+  }).join('');
+
+  let html='';
+  const vtOrder=vtList.map(v=>v.name);
+  Object.keys(groups).sort((a,b)=>{const ia=vtOrder.indexOf(a),ib=vtOrder.indexOf(b);return(ia<0?999:ia)-(ib<0?999:ib);}).forEach(vt=>{
+    const vtRows=groups[vt], color=vtColor(vt);
+
+    html+=`<div class="vt-group"><div class="vt-label"><span class="vt-badge">${vt}</span>${vtRows.length} 筆計畫</div>
+    <table class="gantt-table"><thead>
+      <tr>${fc}${mRow}<th style="min-width:28px"></th></tr>
+      <tr>${'<th class="fc"></th>'.repeat(9)}${dRow}<th></th></tr>
+    </thead><tbody>`;
+
+    vtRows.forEach(row=>{
+      const ri=data.indexOf(row), sD=parseDate(row.supply), eD=parseDate(row.demand);
+      const rArr=Array.isArray(row.region)?row.region:[row.region];
+      const regionDisplay=rArr.length===regionList.length?'ALL':rArr.join('、');
+      let fb=-1,lb=-1;
+      days.forEach((d,i)=>{if(sD&&eD&&d>=sD&&d<=eD){if(fb<0)fb=i;lb=i;}});
+      const cells=days.map((d,i)=>{
+        const isT=isSame(d,today), inR=sD&&eD&&d>=sD&&d<=eD;
+        const bar=inR?`<div style="height:16px;background:${color};border-radius:${i===fb?'3px':'0'} ${i===lb?'3px':'0'} ${i===lb?'3px':'0'} ${i===fb?'3px':'0'};width:100%"></div>`:'';
+        const ts=isT?'border-left:2px solid var(--today-line);border-right:2px solid var(--today-line);':'';
+        return `<td class="day-cell${isT?' today-col':''}" style="${ts}">${bar}</td>`;
+      }).join('');
+      html+=`<tr>
+        <td class="fc fc-vt">${row.vt}</td>
+        <td class="fc fc-client">${row.client}</td>
+        <td class="fc fc-region">${regionDisplay}</td>
+        <td class="fc fc-season">${row.season||''}</td>
+        <td class="fc fc-type"><span style="font-size:11px;padding:2px 6px;border-radius:3px;background:${row.type==='自製樣'?'#f0ede4':'#e8f0f8'};color:${row.type==='自製樣'?'#7a6a3a':'#2a5a8a'}">${row.type||'客人款'}</span></td>
+        <td class="fc fc-styles">${row.styles}</td>
+        <td class="fc fc-pieces">${row.pieces}</td>
+        <td class="fc fc-supply">${fmtDate(sD)}</td>
+        <td class="fc fc-demand">${fmtDate(eD)}</td>
+        ${cells}
+        <td class="action-col"><button class="row-del" onclick="deleteRow(${ri})" title="刪除">✕</button></td>
+      </tr>`;
+      if(row.note){
+        const noteCells=days.map((d,i)=>{const isT=isSame(d,today);const ts=isT?'border-left:2px solid var(--today-line);border-right:2px solid var(--today-line);':'';return`<td class="day-cell${isT?' today-col':''}" style="${ts}"></td>`;}).join('');
+        html+=`<tr class="note-row"><td colspan="9" style="position:sticky;left:0;background:var(--surface)">💬 ${row.note}</td>${noteCells}<td></td></tr>`;
+      }
+    });
+    html+=`</tbody></table></div>`;
+  });
+  wrap.innerHTML=html;
+}
+
+// ══ Settings render ══
+function renderSettings(){
+  // VT table
+  document.getElementById('vtTableBody').innerHTML=vtList.map((v,i)=>`
+    <tr>
+      <td><input type="color" class="vt-color-btn" value="${v.color}" title="更改顏色"
+        onchange="vtList[${i}].color=this.value;render()"></td>
+      <td><input class="vt-name-input" value="${v.name}"
+        onchange="vtList[${i}].name=this.value;render()"
+        onblur="vtList[${i}].name=this.value;render()"></td>
+      <td><button class="icon-btn" onclick="removeVT(${i})" title="刪除此 VT">✕</button></td>
+    </tr>`).join('');
+
+  // Region tags
+  document.getElementById('regionTagList').innerHTML=
+    regionList.length
+      ? regionList.map((r,i)=>`<span class="tag">${r}<button class="tag-del" onclick="removeRegion(${i})" title="刪除">✕</button></span>`).join('')
+      : `<span style="font-size:12px;color:var(--text-light)">尚無製樣區選項</span>`;
+}
+
+function addVT(){
+  const name=document.getElementById('newVtName').value.trim();
+  const color=document.getElementById('newVtColor').value;
+  if(!name)return;
+  if(vtList.find(v=>v.name===name)){showToast('已有相同名稱的 VT');return;}
+  vtList.push({name,color});
+  document.getElementById('newVtName').value='';
+  renderSettings();render();
+  showToast(`已新增 VT「${name}」`);
+}
+
+function removeVT(i){
+  if(!confirm(`確定刪除「${vtList[i].name}」？（現有計畫資料不受影響）`))return;
+  vtList.splice(i,1);renderSettings();render();
+}
+
+function addRegion(){
+  const val=document.getElementById('newRegionInput').value.trim();
+  if(!val)return;
+  if(regionList.includes(val)){showToast('已有此製樣區');return;}
+  regionList.push(val);
+  document.getElementById('newRegionInput').value='';
+  // rebuild filter checkboxes
+  document.getElementById('regionCheckboxes').innerHTML='';
+  renderSettings();
+  showToast(`已新增製樣區「${val}」`);
+}
+
+function removeRegion(i){
+  regionList.splice(i,1);
+  document.getElementById('regionCheckboxes').innerHTML='';
+  renderSettings();render();
+}
+
+// ══ Modal ══
+function populateFormSelects(selectedRegions=[]){
+  document.getElementById('f-vt').innerHTML=vtList.map(v=>`<option>${v.name}</option>`).join('');
+  document.getElementById('f-region-cbs').innerHTML=regionList.map(r=>`
+    <label class="region-cb-label" style="font-size:12px">
+      <input type="checkbox" id="f-rcb-${r}" value="${r}"${selectedRegions.includes(r)?' checked':''}> ${r}
+    </label>`).join('');
+}
+function openAdd(){
+  editIdx=-1; populateFormSelects();
+  document.getElementById('modalTitle').textContent='新增開發計畫';
+  ['f-client','f-season','f-supply','f-demand','f-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-type').value='客人款';
+  document.getElementById('f-styles').value=5;
+  document.getElementById('f-pieces').value=20;
+  document.getElementById('addModal').classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openImport(){document.getElementById('csvInput').value='';document.getElementById('importModal').classList.add('open');}
+
+function saveEntry(){
+  const selectedRegions=regionList.filter(r=>document.getElementById('f-rcb-'+r)?.checked);
+  const entry={
+    vt:document.getElementById('f-vt').value,
+    client:document.getElementById('f-client').value.trim()||'未命名',
+    region:selectedRegions,
+    season:document.getElementById('f-season').value.trim(),
+    type:document.getElementById('f-type').value,
+    styles:parseInt(document.getElementById('f-styles').value)||1,
+    pieces:parseInt(document.getElementById('f-pieces').value)||1,
+    supply:document.getElementById('f-supply').value,
+    demand:document.getElementById('f-demand').value,
+    note:document.getElementById('f-note').value.trim(),
+  };
+  if(editIdx>=0)data[editIdx]=entry; else data.push(entry);
+  closeModal('addModal');render();
+  showToast(editIdx>=0?'已更新計畫':'已新增計畫');
+}
+
+function deleteRow(idx){
+  if(!confirm(`確定要刪除「${data[idx].client}」這筆計畫？`))return;
+  data.splice(idx,1);render();showToast('已刪除');
+}
+
+// ══ CSV ══
+function exportCSV(){
+  const rows=['VT,客人,製樣區,季度,類型,款數,件數,供料日,需求日,備註'];
+  data.forEach(r=>{
+    const rArr=Array.isArray(r.region)?r.region:[r.region];
+    rows.push(`${r.vt},${r.client},"${rArr.join('|')}",${r.season||''},${r.type||'客人款'},${r.styles},${r.pieces},${r.supply},${r.demand},"${(r.note||'').replace(/"/g,'""')}"`);
+  });
+  const blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dev_plan.csv';a.click();
+  showToast('CSV 已匯出');
+}
+
+function doImport(){
+  const raw=document.getElementById('csvInput').value.trim();
+  if(!raw)return;
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const parsed=[];let skipped=0;
+  lines.forEach((line,i)=>{
+    const cols=parseCSVLine(line);
+    if(i===0&&isNaN(parseInt(cols[5])))return;
+    if(cols.length<9){skipped++;return;}
+    const[vt,client,region,season,type,styles,pieces,supply,demand,...rest]=cols;
+    const rArr=region.replace(/^"|"$/g,'').split('|').map(s=>s.trim()).filter(Boolean);
+    parsed.push({vt:vt||'其他',client:client||'未命名',
+      region:rArr.length?rArr:['平湖'],
+      season:season.trim(),
+      type:['客人款','自製樣'].includes(type)?type:'客人款',
+      styles:parseInt(styles)||1,pieces:parseInt(pieces)||1,
+      supply:supply.trim(),demand:demand.trim(),
+      note:rest.join(',').replace(/^"|"$/g,'')});
+  });
+  const append=document.getElementById('importAppend').checked;
+  data=append?[...data,...parsed]:parsed;
+  closeModal('importModal');render();
+  showToast(`匯入 ${parsed.length} 筆${skipped?`（略過 ${skipped} 筆）`:''}`);
+}
+
+function parseCSVLine(line){
+  const result=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(c===','&&!inQ){result.push(cur);cur='';}
+    else cur+=c;
+  }
+  result.push(cur);return result;
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
+});
+
+render();
+</script>
+</body>
+</html>
