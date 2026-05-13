@@ -494,8 +494,10 @@ function render(){
   const vtOrder=vtList.map(v=>v.name);
   Object.keys(groups).sort((a,b)=>{const ia=vtOrder.indexOf(a),ib=vtOrder.indexOf(b);return(ia<0?999:ia)-(ib<0?999:ib);}).forEach(vt=>{
     const vtRows=groups[vt], color=vtColor(vt);
+    const totalStyles=vtRows.reduce((s,r)=>s+r.styles,0);
+    const totalPieces=vtRows.reduce((s,r)=>s+r.pieces,0);
 
-    html+=`<div class="vt-group"><div class="vt-label"><span class="vt-badge">${vt}</span>${vtRows.length} 筆計畫</div>
+    html+=`<div class="vt-group"><div class="vt-label"><span class="vt-badge">${vt}</span>${vtRows.length} 筆計畫 &nbsp;<span style="font-weight:400;color:var(--text-muted);font-size:11px">${totalStyles} 款 &nbsp;${totalPieces} 件</span></div>
     <table class="gantt-table"><thead>
       <tr>${fc}${mRow}<th style="min-width:28px"></th></tr>
       <tr>${'<th class="fc"></th>'.repeat(9)}${dRow}<th></th></tr>
