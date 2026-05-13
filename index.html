@@ -440,6 +440,7 @@ async function loadFromSheet() {
     });
     if (parsed.length > 0) {
       data = parsed;
+      console.log('載入資料:', JSON.stringify(parsed.map(r=>({client:r.client,region:r.region}))));
       showBanner(`已從 Google Sheets 載入 ${parsed.length} 筆`, false, true);
     } else {
       showBanner('試算表格式有誤，顯示預設資料', true);
