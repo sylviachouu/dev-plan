@@ -152,21 +152,15 @@
     font-size: 9px; position: relative; color: #d04a2f;
     vertical-align: middle;
   }
-  .note-tip:hover { opacity: 1; color: #b03a20; }
-  .note-tip:hover::after {
-    content: attr(data-note);
-    position: absolute; left: 0; top: 100%; margin-top: 4px;
+  .note-tip:hover { color: #b03a20; }
+  #jsTooltip {
+    display: none; position: fixed; z-index: 999;
     background: #2a2825; color: #f0eee8;
     padding: 6px 10px; border-radius: 5px;
-    font-size: 11px; font-style: normal; font-weight: 400;
-    white-space: pre-wrap; max-width: 260px; width: max-content;
+    font-size: 11px; font-weight: 400;
+    white-space: pre-wrap; max-width: 260px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-    z-index: 50; line-height: 1.5;
-  }
-  .note-tip:hover::before {
-    content: ''; position: absolute; left: 6px; top: 100%;
-    border: 5px solid transparent; border-bottom-color: #2a2825;
-    z-index: 51;
+    line-height: 1.5; pointer-events: none;
   }
 
   /* ── Settings ── */
@@ -383,6 +377,7 @@ V2,DKS,平湖,177,620,2025-05-06,2025-05-20,SP27"></textarea>
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="jsTooltip"></div>
 
 <script>
 // ══ App state ══
@@ -608,7 +603,7 @@ function render(){
         const ts=isT?'border-left:2px solid var(--today-line);border-right:2px solid var(--today-line);':'';
         return `<td class="day-cell${isT?' today-col':''}" style="${ts}">${bar}</td>`;
       }).join('');
-      const noteIcon = row.note ? `<span class="note-tip" data-note="${row.note.replace(/"/g,'&quot;')}">●</span>` : '';
+      const noteIcon = row.note ? `<span class="note-tip" data-note-idx="${ri}">●</span>` : '';
       html+=`<tr>
         <td class="fc fc-vt">${row.vt}</td>
         <td class="fc fc-client">${row.client}${noteIcon}</td>
@@ -626,6 +621,24 @@ function render(){
     html+=`</tbody></table></div>`;
   });
   wrap.innerHTML=html;
+  bindNoteTooltips();
+}
+
+function bindNoteTooltips(){
+  const tip=document.getElementById('jsTooltip');
+  document.querySelectorAll('.note-tip').forEach(el=>{
+    el.addEventListener('mouseenter',e=>{
+      const idx=parseInt(el.getAttribute('data-note-idx'));
+      const noteText=data[idx]?data[idx].note:'';
+      if(!noteText)return;
+      tip.textContent=noteText;
+      tip.style.display='block';
+      const rect=el.getBoundingClientRect();
+      tip.style.left=rect.left+'px';
+      tip.style.top=(rect.bottom+6)+'px';
+    });
+    el.addEventListener('mouseleave',()=>{ tip.style.display='none'; });
+  });
 }
 
 // ══ Settings render ══
