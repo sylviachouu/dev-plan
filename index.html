@@ -110,7 +110,7 @@
   .vt-badge { background: var(--header-bg); color: var(--header-text); font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 500; }
 
   /* ── Table ── */
-  .gantt-table { border-collapse: collapse; width: max-content; min-width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; box-shadow: var(--shadow); }
+  .gantt-table { border-collapse: collapse; width: max-content; min-width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow); }
   .gantt-table thead tr:first-child th { background: #3a3830; color: #ccc; }
   .gantt-table thead tr:last-child th  { background: #3a3830; color: #ccc; }
   thead th { font-size: 11px; font-weight: 500; padding: 7px 10px; white-space: nowrap; text-align: center; vertical-align: middle; position: sticky; top: 0; z-index: 4; border-right: 1px solid rgba(255,255,255,0.07); }
@@ -147,7 +147,26 @@
   td.action-col { width: 28px; min-width: 28px; text-align: center; padding: 0 4px; }
   .row-del { font-size: 11px; color: var(--text-light); background: none; border: none; cursor: pointer; padding: 3px; border-radius: 3px; line-height: 1; }
   .row-del:hover { background: #fee; color: var(--accent); }
-  .note-row td { font-size: 11px; color: var(--text-muted); padding: 2px 10px 6px; font-style: italic; border-bottom: 1px solid var(--border); }
+  .note-tip {
+    display: inline-block; margin-left: 4px; cursor: help;
+    font-size: 11px; position: relative; opacity: 0.7;
+  }
+  .note-tip:hover { opacity: 1; }
+  .note-tip:hover::after {
+    content: attr(data-note);
+    position: absolute; left: 0; top: 100%; margin-top: 4px;
+    background: #2a2825; color: #f0eee8;
+    padding: 6px 10px; border-radius: 5px;
+    font-size: 11px; font-style: normal; font-weight: 400;
+    white-space: pre-wrap; max-width: 260px; width: max-content;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 50; line-height: 1.5;
+  }
+  .note-tip:hover::before {
+    content: ''; position: absolute; left: 6px; top: 100%;
+    border: 5px solid transparent; border-bottom-color: #2a2825;
+    z-index: 51;
+  }
 
   /* ── Settings ── */
   .settings-wrap { padding: 28px; max-width: 640px; }
@@ -242,7 +261,7 @@
     <label>顯示天數</label>
     <select id="dayCount" onchange="render()">
       <option value="14">14 天</option><option value="21">21 天</option>
-      <option value="30" selected>30 天</option><option value="45">45 天</option><option value="60">60 天</option>
+      <option value="30">30 天</option><option value="45">45 天</option><option value="60" selected>60 天</option>
     </select>
     <div class="ctrl-sep"></div>
     <label>篩選 VT</label>
@@ -588,9 +607,10 @@ function render(){
         const ts=isT?'border-left:2px solid var(--today-line);border-right:2px solid var(--today-line);':'';
         return `<td class="day-cell${isT?' today-col':''}" style="${ts}">${bar}</td>`;
       }).join('');
+      const noteIcon = row.note ? `<span class="note-tip" data-note="${row.note.replace(/"/g,'&quot;')}">💬</span>` : '';
       html+=`<tr>
         <td class="fc fc-vt">${row.vt}</td>
-        <td class="fc fc-client">${row.client}</td>
+        <td class="fc fc-client">${row.client}${noteIcon}</td>
         <td class="fc fc-region">${regionDisplay}</td>
         <td class="fc fc-season">${row.season||''}</td>
         <td class="fc fc-type"><span style="font-size:11px;padding:2px 6px;border-radius:3px;background:${row.type==='自製樣'?'#f0ede4':'#e8f0f8'};color:${row.type==='自製樣'?'#7a6a3a':'#2a5a8a'}">${row.type||'客人款'}</span></td>
@@ -601,10 +621,6 @@ function render(){
         ${cells}
         <td class="action-col"><button class="row-del" onclick="deleteRow(${ri})" title="刪除">✕</button></td>
       </tr>`;
-      if(row.note){
-        const noteCells=days.map((d,i)=>{const isT=isSame(d,today);const ts=isT?'border-left:2px solid var(--today-line);border-right:2px solid var(--today-line);':'';return`<td class="day-cell${isT?' today-col':''}" style="${ts}"></td>`;}).join('');
-        html+=`<tr class="note-row"><td colspan="9" style="position:sticky;left:0;background:var(--surface)">💬 ${row.note}</td>${noteCells}<td></td></tr>`;
-      }
     });
     html+=`</tbody></table></div>`;
   });
