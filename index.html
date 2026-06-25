@@ -148,10 +148,11 @@
   .row-del { font-size: 11px; color: var(--text-light); background: none; border: none; cursor: pointer; padding: 3px; border-radius: 3px; line-height: 1; }
   .row-del:hover { background: #fee; color: var(--accent); }
   .note-tip {
-    display: inline-block; margin-left: 4px; cursor: help;
-    font-size: 11px; position: relative; opacity: 0.7;
+    display: inline-block; margin-left: 5px; cursor: help;
+    font-size: 9px; position: relative; color: #d04a2f;
+    vertical-align: middle;
   }
-  .note-tip:hover { opacity: 1; }
+  .note-tip:hover { opacity: 1; color: #b03a20; }
   .note-tip:hover::after {
     content: attr(data-note);
     position: absolute; left: 0; top: 100%; margin-top: 4px;
@@ -607,7 +608,7 @@ function render(){
         const ts=isT?'border-left:2px solid var(--today-line);border-right:2px solid var(--today-line);':'';
         return `<td class="day-cell${isT?' today-col':''}" style="${ts}">${bar}</td>`;
       }).join('');
-      const noteIcon = row.note ? `<span class="note-tip" data-note="${row.note.replace(/"/g,'&quot;')}">💬</span>` : '';
+      const noteIcon = row.note ? `<span class="note-tip" data-note="${row.note.replace(/"/g,'&quot;')}">●</span>` : '';
       html+=`<tr>
         <td class="fc fc-vt">${row.vt}</td>
         <td class="fc fc-client">${row.client}${noteIcon}</td>
