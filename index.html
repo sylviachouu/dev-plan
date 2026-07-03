@@ -529,8 +529,8 @@ function render(){
   if(regionFilterActive){
     rows=rows.filter(r=>{
       const rArr=Array.isArray(r.region)?r.region:[r.region];
-      // 全區（勾選所有地區）的資料，任何篩選條件下都顯示
-      if(rArr.length===regionList.length) return true;
+      // 全區資料永遠顯示
+      if(rArr.includes('全區') || rArr.length===regionList.length) return true;
       const rStr=rArr.join('|');
       return checkedRegions.some(cr=>rStr.includes(cr));
     });
@@ -596,7 +596,8 @@ function render(){
     vtRows.forEach(row=>{
       const ri=data.indexOf(row), sD=parseDate(row.supply), eD=parseDate(row.demand);
       const rArr=Array.isArray(row.region)?row.region:[row.region];
-      const regionDisplay=rArr.length===regionList.length?'全區':rArr.join('、');
+      const isAllRegion = rArr.length===0 || rArr.includes('全區') || rArr.length===regionList.length;
+      const regionDisplay = isAllRegion ? '全區' : rArr.join('、');
       let fb=-1,lb=-1;
       days.forEach((d,i)=>{if(sD&&eD&&d>=sD&&d<=eD){if(fb<0)fb=i;lb=i;}});
       const cells=days.map((d,i)=>{
