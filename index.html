@@ -115,15 +115,15 @@
   .gantt-table thead tr:last-child th  { background: #3a3830; color: #ccc; }
   thead th { font-size: 11px; font-weight: 500; padding: 7px 10px; white-space: nowrap; text-align: center; vertical-align: middle; position: sticky; top: 0; z-index: 4; border-right: 1px solid rgba(255,255,255,0.07); }
   thead th.fc { text-align: center !important; vertical-align: middle; position: sticky; z-index: 6; }
-  thead th.fc-vt    { left: 0;    min-width: 44px; max-width: 44px; }
-  thead th.fc-client{ left: 44px; min-width: 76px; max-width: 76px; }
-  thead th.fc-region{ left: 120px;min-width: 62px; max-width: 62px; }
-  thead th.fc-season{ left: 182px;min-width: 52px; max-width: 52px; }
-  thead th.fc-type  { left: 234px;min-width: 58px; max-width: 58px; }
-  thead th.fc-styles{ left: 292px;min-width: 44px; max-width: 44px; }
-  thead th.fc-pieces{ left: 336px;min-width: 44px; max-width: 44px; }
-  thead th.fc-supply{ left: 380px;min-width: 56px; max-width: 56px; }
-  thead th.fc-demand{ left: 436px;min-width: 56px; max-width: 56px; }
+  thead th.fc-vt    { left: 0;    min-width: 44px;  max-width: 44px; }
+  thead th.fc-client{ left: 44px; min-width: 76px;  max-width: 76px; }
+  thead th.fc-region{ left: 120px;min-width: 110px; max-width: 110px; }
+  thead th.fc-season{ left: 230px;min-width: 56px;  max-width: 56px; }
+  thead th.fc-type  { left: 286px;min-width: 58px;  max-width: 58px; }
+  thead th.fc-styles{ left: 344px;min-width: 44px;  max-width: 44px; }
+  thead th.fc-pieces{ left: 388px;min-width: 44px;  max-width: 44px; }
+  thead th.fc-supply{ left: 432px;min-width: 56px;  max-width: 56px; }
+  thead th.fc-demand{ left: 488px;min-width: 56px;  max-width: 56px; }
   thead th.fc-demand { border-right: 2px solid rgba(255,255,255,0.18) !important; }
   tbody td.fc-demand { border-right: 2px solid var(--border-strong) !important; }
   tbody tr { border-bottom: 1px solid var(--border); }
@@ -132,15 +132,15 @@
   tbody td { font-size: 12px; padding: 5px 10px; color: var(--text); vertical-align: middle; white-space: nowrap; background: var(--surface); }
   tbody td.fc { position: sticky; z-index: 2; background: var(--surface); }
   tbody tr:hover td.fc { background: #f9f8f5; }
-  tbody td.fc-vt    { left: 0;    min-width: 44px; max-width: 44px; font-weight:600; font-size:11px; color:var(--text-muted); }
-  tbody td.fc-client{ left: 44px; min-width: 76px; max-width: 76px; font-weight:500; }
-  tbody td.fc-region{ left: 120px;min-width: 62px; max-width: 62px; color:var(--text-muted); }
-  tbody td.fc-season{ left: 182px;min-width: 52px; max-width: 52px; color:var(--text-muted); font-size:11px; }
-  tbody td.fc-type  { left: 234px;min-width: 58px; max-width: 58px; }
-  tbody td.fc-styles{ left: 292px;min-width: 44px; max-width: 44px; text-align:right; }
-  tbody td.fc-pieces{ left: 336px;min-width: 44px; max-width: 44px; text-align:right; color:var(--text-muted); }
-  tbody td.fc-supply{ left: 380px;min-width: 56px; max-width: 56px; font-size:11px; color:var(--text-muted); }
-  tbody td.fc-demand{ left: 436px;min-width: 56px; max-width: 56px; font-size:11px; color:var(--text-muted); }
+  tbody td.fc-vt    { left: 0;    min-width: 44px;  max-width: 44px;  font-weight:600; font-size:11px; color:var(--text-muted); }
+  tbody td.fc-client{ left: 44px; min-width: 76px;  max-width: 76px;  font-weight:500; }
+  tbody td.fc-region{ left: 120px;min-width: 110px; max-width: 110px; color:var(--text-muted); }
+  tbody td.fc-season{ left: 230px;min-width: 56px;  max-width: 56px;  color:var(--text-muted); font-size:11px; }
+  tbody td.fc-type  { left: 286px;min-width: 58px;  max-width: 58px; }
+  tbody td.fc-styles{ left: 344px;min-width: 44px;  max-width: 44px;  text-align:right; }
+  tbody td.fc-pieces{ left: 388px;min-width: 44px;  max-width: 44px;  text-align:right; color:var(--text-muted); }
+  tbody td.fc-supply{ left: 432px;min-width: 56px;  max-width: 56px;  font-size:11px; color:var(--text-muted); }
+  tbody td.fc-demand{ left: 488px;min-width: 56px;  max-width: 56px;  font-size:11px; color:var(--text-muted); }
   td.day-cell, th.day-cell { width: 26px; min-width: 26px; max-width: 26px; padding: 3px 1px; text-align: center; }
   td.today-col { background: rgba(208,74,47,0.06) !important; }
   th.today-head { color: var(--today-line) !important; font-weight: 600; }
@@ -529,6 +529,8 @@ function render(){
   if(regionFilterActive){
     rows=rows.filter(r=>{
       const rArr=Array.isArray(r.region)?r.region:[r.region];
+      // 全區（勾選所有地區）的資料，任何篩選條件下都顯示
+      if(rArr.length===regionList.length) return true;
       const rStr=rArr.join('|');
       return checkedRegions.some(cr=>rStr.includes(cr));
     });
@@ -594,7 +596,7 @@ function render(){
     vtRows.forEach(row=>{
       const ri=data.indexOf(row), sD=parseDate(row.supply), eD=parseDate(row.demand);
       const rArr=Array.isArray(row.region)?row.region:[row.region];
-      const regionDisplay=rArr.length===regionList.length?'ALL':rArr.join('、');
+      const regionDisplay=rArr.length===regionList.length?'全區':rArr.join('、');
       let fb=-1,lb=-1;
       days.forEach((d,i)=>{if(sD&&eD&&d>=sD&&d<=eD){if(fb<0)fb=i;lb=i;}});
       const cells=days.map((d,i)=>{
